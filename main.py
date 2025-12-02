@@ -9,7 +9,7 @@ from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, Callb
 # ÁREA DE EDIÇÃO - PREENCHA AQUI COM SEUS DADOS
 # ==============================================================================
 
-TOKEN_DO_BOT = '8553730181:AAF6ko-j_bJ5C5qrJn6wRLTsdgCTpsVV3bcI'
+TOKEN_DO_BOT = '8553730181:AAF6ko-j_bJ5C5qrJn6wRLTsdgCTpsVV3bc'
 
 # ⚠️ NOVO: Seu ID de usuário (Pegue no @userinfobot). Ex: 123456789
 # Sem aspas, apenas números.
