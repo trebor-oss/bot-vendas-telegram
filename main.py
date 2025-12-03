@@ -206,7 +206,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• Ângulos que nunca mostrei antes\n"
         "• Acesso Vitalício (Baixe e guarde)\n\n"
         "🔥 **De ~R$ 29,90~ mas agora estou fazendo uma Promoção Relâmpago**\n"
-        "👇 Garanta seu lugar antes que o preço suba." **R$ {VALOR_PRODUTO}**"
+        "👇 Garanta seu lugar antes que o preço suba. **R$ {VALOR_PRODUTO}**"
     )
     kb = [[InlineKeyboardButton("🔓 Quero Acesso Agora", callback_data='comprar')]]
     await update.message.reply_text(texto, reply_markup=InlineKeyboardMarkup(kb), parse_mode='Markdown')
@@ -281,4 +281,5 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(marketing_automacao_loop(app_bot))
     app_bot.run_polling()
+
 
