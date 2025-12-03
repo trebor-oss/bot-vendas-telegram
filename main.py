@@ -25,8 +25,8 @@ TIPO_PRODUTO = 'documento'
 # FINANCEIRO
 # ⚠️ IMPORTANTE: Cole seu Token do Mercado Pago aqui
 MP_ACCESS_TOKEN = 'APP_USR-1151802253593086-120216-db34f09f0a276c014b4ea41f372b5080-7110707' 
-VALOR_PRODUTO = 0.01   # Preço do Pack
-VALOR_MENSAGEM = 0.02  # Preço simbólico para falar com você
+VALOR_PRODUTO = 9.99   # Preço do Pack
+VALOR_MENSAGEM = 1.00  # Preço simbólico para falar com você
 
 # MARKETING AUTOMÁTICO (Dia 2 e 3)
 # O código {nome} será substituído pelo nome do usuário automaticamente
@@ -385,5 +385,6 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(marketing_automacao_loop(app_bot))
     app_bot.run_polling()
+
 
 
