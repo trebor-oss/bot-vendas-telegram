@@ -22,7 +22,7 @@ ADMIN_ID = 8118512396
 # Sem isso, o bot vai dar erro ao tentar gerar o Pix.
 MP_ACCESS_TOKEN = 'APP_USR-1151802253593086-120216-db34f09f0a276c014b4ea41f372b5080-7110707'
 
-VALOR_PRODUTO = 1.99 #Valor do Produto (valor que o cliente, vai pagar no pix)
+VALOR_PRODUTO = 9.99 #Valor do Produto (valor que o cliente, vai pagar no pix)
 
 # 4. SEUS ARQUIVOS (VITRINE E PRODUTO)
 ID_VITRINE = 'BAACAgEAAxkBAAMRaS8rNKhVKXPYWqXhC970CFlCaYwAAnQGAAKRS3lFP5Q3Hl9lVNg2BA'
@@ -206,4 +206,5 @@ if __name__ == '__main__':
     
     print("Bot Automático Iniciado...")
     application.run_polling()
+
 
