@@ -19,7 +19,7 @@ ADMIN_ID = 8118512396
 # SEUS ARQUIVOS
 ID_VITRINE = 'BAACAgEAAxkBAAMRaS8rNKhVKXPYWqXhC970CFlCaYwAAnQGAAKRS3lFP5Q3Hl9lVNg2BA'
 TIPO_VITRINE = 'video' 
-ID_PRODUTO = 'BQACAgEAAxkBAAMaaS8t485BndGpJ_I2t_gZyj9ZX3QAAncGAAKRS3lFLCbLbVc-e8w2BA'
+ID_PRODUTO = 'BQACAgEAAxkBAAPlaTBbPtZ8d4PJ7z205epByhalr5cAAuoGAAKawYhFZgL2GysJ2_w2BA'
 TIPO_PRODUTO = 'documento'
 
 # FINANCEIRO
@@ -385,3 +385,4 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(marketing_automacao_loop(app_bot))
     app_bot.run_polling()
+
