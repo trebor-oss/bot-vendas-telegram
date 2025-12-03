@@ -30,8 +30,13 @@ VALOR_PRODUTO = 0.01 #PRECO QUE O CLIENTE VAI PAGAR
 # CONFIGURAÇÃO DE MARKETING (Dia 2 e 3)
 ID_DIA_2 = 'BAACAgEAAxkBAANraTAvKSUG3TxC_CIPrGRsA9ZOnQcAAsAGAAKawYhFoHG-Wdvo9eM2BA' 
 TXT_DIA_2 = "Ficou na vontade? 😈 O link vai expirar. Garanta o seu agora."
-ID_DIA_3 = '' 
-TXT_DIA_3 = "Última chance para o valor promocional."
+ID_DIA_3 = 'AgACAgEAAxkBAAOGaTA7SrfoOaeHlz784ThYZ_U__kgAAiMLaxuawYhFLGFNqnmzeL8BAAMCAAN5AAM2BA' 
+TXT_DIA_3 = (
+    "Ainda com medo de não receber seu pack de imagens/videos? 🤔\n\n"
+    "Dá uma olhada em quem comprou hoje cedo! 👆\n\n"
+    "Aqui o sistema é automático: Pagou, recebeu na hora. Sem enrolação.\n\n"
+    "O valor promocional de **R$ 9,99** esta se encerrando. Vem logo antes de voltar ao preço normal de **R$29,90**"
+)
 
 # ==============================================================================
 
@@ -193,9 +198,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except: pass
     
     texto = (
-        "Olá! 🔥\n\nVocê está prestes a desbloquear o **Pack Exclusivo**.\n"
-        "💎 **Conteúdo Completo HD**\n🚀 **Entrega Automática**\n\n"
-        f"Promoção: **R$ {VALOR_PRODUTO}**"
+        f"Oi, {user_name}... Sabia que você viria. 😈\n\n"
+        "O que você vê nas redes sociais é só 1% do que eu gravo.\n"
+        "Aqui, a brincadeira é **sem cortes, sem tarjas e sem limites**.\n\n"
+        "🔞 **O que te espera:**\n"
+        "• Vídeos Completos em Full HD\n"
+        "• Ângulos que nunca mostrei antes\n"
+        "• Acesso Vitalício (Baixe e guarde)\n\n"
+        "🔥 **De ~R$ 29,90~ mas agora estou fazendo uma Promoção Relâmpago**\n"
+        "👇 Garanta seu lugar antes que o preço suba." **R$ {VALOR_PRODUTO}**"
     )
     kb = [[InlineKeyboardButton("🔓 Quero Acesso Agora", callback_data='comprar')]]
     await update.message.reply_text(texto, reply_markup=InlineKeyboardMarkup(kb), parse_mode='Markdown')
@@ -270,3 +281,4 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(marketing_automacao_loop(app_bot))
     app_bot.run_polling()
+
