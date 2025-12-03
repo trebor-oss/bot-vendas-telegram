@@ -16,7 +16,7 @@ from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, Callb
 TOKEN_DO_BOT = '8553730181:AAF6ko-j_bJ5C5qrJn6wRLTsdgCTpsVV3bc'
 ADMIN_ID = 8118512396
 MP_ACCESS_TOKEN = 'APP_USR-1151802253593086-120216-db34f09f0a276c014b4ea41f372b5080-7110707' # TOKEN MERCADO PAGO
-VALOR_PRODUTO = 0.09 #VALOR QUE O CLIENTE IRA PAGAR
+VALOR_PRODUTO = 0.01 #VALOR QUE O CLIENTE IRA PAGAR
 
 # PRODUTO PRINCIPAL (Start)
 ID_VITRINE = 'BAACAgEAAxkBAAMRaS8rNKhVKXPYWqXhC970CFlCaYwAAnQGAAKRS3lFP5Q3Hl9lVNg2BA'
@@ -306,4 +306,5 @@ if __name__ == '__main__':
     loop.create_task(marketing_automacao_loop(app_bot))
     
     app_bot.run_polling()
+
 
