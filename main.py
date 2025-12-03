@@ -166,7 +166,7 @@ async def check_payment_loop(context: ContextTypes.DEFAULT_TYPE, chat_id, paymen
                         await context.bot.edit_message_text(
                             chat_id=chat_id, 
                             message_id=message_id, 
-                            text="✅ **CHAT VIP LIBERADO!**\n\nPode escrever sua mensagem ou sugestão abaixo que eu vou ler com carinho. 👇", 
+                            text="✅ **CHAT PRIVADO LIBERADO!**\n\n {nome} ,pode escrever sua mensagem ou sugestão abaixo que eu vou ler com carinho. 👇", 
                             parse_mode='Markdown'
                         )
                     except: pass
@@ -317,7 +317,7 @@ async def receber_mensagem_privada(update: Update, context: ContextTypes.DEFAULT
             if update.message.photo or update.message.video or update.message.document:
                 await update.message.forward(ADMIN_ID)
 
-            await update.message.reply_text("✅ **Mensagem Enviada!**\nEu recebi aqui e vou ler com carinho. Obrigado!")
+            await update.message.reply_text("✅ **Mensagem Enviada!**\nOi, {nome} eu recebi aqui sua mensagem e vou ler com carinho. Obrigada!")
             atualizar_campo(user_id, "pode_mandar_msg", False)
         except:
             await update.message.reply_text("Erro ao enviar. Tente novamente.")
@@ -371,3 +371,4 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(marketing_automacao_loop(app_bot))
     app_bot.run_polling()
+
