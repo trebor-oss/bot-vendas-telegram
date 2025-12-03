@@ -30,13 +30,13 @@ VALOR_PRODUTO = 0.01 # PRECO DE TESTE
 
 # CONFIGURAÇÃO DE MARKETING (Dia 2 e 3)
 ID_DIA_2 = 'BAACAgEAAxkBAANraTAvKSUG3TxC_CIPrGRsA9ZOnQcAAsAGAAKawYhFoHG-Wdvo9eM2BA' 
-TXT_DIA_2 = "Ficou na vontade? 😈 O link vai expirar. Garanta o seu agora."
+TXT_DIA_2 = "Ficou na vontade, {nome} ? 😈 O link vai expirar. Garanta o seu agora."
 
 ID_DIA_3 = 'AgACAgEAAxkBAAOGaTA7SrfoOaeHlz784ThYZ_U__kgAAiMLaxuawYhFLGFNqnmzeL8BAAMCAAN5AAM2BA' 
 TXT_DIA_3 = (
-    "Ainda com medo de não receber seu pack de imagens/videos? 🤔\n\n"
+    " {nome} ainda esta com medo de não receber seu pack de imagens/videos? 🤔\n\n"
     "Dá uma olhada em quem comprou hoje cedo! 👆\n\n"
-    "Aqui o sistema é automático: Pagou, recebeu na hora. Sem enrolação.\n\n"
+    " {nome} Aqui o sistema é automático: Pagou, recebeu na hora. Sem enrolação.\n\n"
     "O valor promocional de **R$ 9,99** esta se encerrando. Vem logo antes de voltar ao preço normal de **R$29,90**"
 )
 
@@ -288,3 +288,4 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(marketing_automacao_loop(app_bot))
     app_bot.run_polling()
+
