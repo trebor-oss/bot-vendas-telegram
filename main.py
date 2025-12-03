@@ -23,13 +23,16 @@ ID_PRODUTO = 'BQACAgEAAxkBAAMaaS8t485BndGpJ_I2t_gZyj9ZX3QAAncGAAKRS3lFLCbLbVc-e8
 TIPO_PRODUTO = 'documento'
 
 # FINANCEIRO
-MP_ACCESS_TOKEN = 'APP_USR-1151802253593086-120216-db34f09f0a276c014b4ea41f372b5080-7110707' 
+# ⚠️ IMPORTANTE: Cole seu Token do Mercado Pago aqui
+MP_ACCESS_TOKEN = 'COLE_SEU_TOKEN_MERCADO_PAGO_AQUI' 
 VALOR_PRODUTO = 0.01   # Preço do Pack
-VALOR_MENSAGEM = 0.01  # Preço simbólico para falar com você
+VALOR_MENSAGEM = 0.02  # Preço simbólico para falar com você
 
-# MARKETING (Dia 2 e 3)
+# MARKETING AUTOMÁTICO (Dia 2 e 3)
+# O código {nome} será substituído pelo nome do usuário automaticamente
 ID_DIA_2 = 'BAACAgEAAxkBAANraTAvKSUG3TxC_CIPrGRsA9ZOnQcAAsAGAAKawYhFoHG-Wdvo9eM2BA' 
 TXT_DIA_2 = "Ficou na vontade, {nome}? 😈 O link vai expirar. Garanta o seu agora."
+
 ID_DIA_3 = 'AgACAgEAAxkBAAOGaTA7SrfoOaeHlz784ThYZ_U__kgAAiMLaxuawYhFLGFNqnmzeL8BAAMCAAN5AAM2BA' 
 TXT_DIA_3 = "Ainda com medo, {nome}? 🤔 Olha quem comprou hoje! O valor de R$ 9,99 vai subir."
 
@@ -57,9 +60,14 @@ def salvar_db(dados):
     except: pass
 
 def registrar_usuario(chat_id, nome):
+    """Salva ou atualiza o nome do usuário no banco de dados"""
     try:
         db = carregar_db()
         str_id = str(chat_id)
+        
+        # Garante que temos um nome, senão usa "Amor" como fallback
+        if not nome: nome = "Amor"
+            
         if str_id not in db:
             db[str_id] = {
                 "nome": nome,
@@ -69,12 +77,13 @@ def registrar_usuario(chat_id, nome):
                 "pode_mandar_msg": False 
             }
         else:
+            # Atualiza o nome sempre que ele interage
             db[str_id]["nome"] = nome
+            
         salvar_db(db)
     except: pass
 
 def atualizar_campo(chat_id, campo, valor):
-    """Atualiza permissões no banco de dados"""
     try:
         db = carregar_db()
         str_id = str(chat_id)
@@ -88,8 +97,9 @@ def verificar_permissao_msg(chat_id):
     return db.get(str(chat_id), {}).get("pode_mandar_msg", False)
 
 def pegar_nome_cliente(chat_id):
+    """Busca o nome salvo. Se der erro, retorna 'Amor'"""
     db = carregar_db()
-    return db.get(str(chat_id), {}).get("nome", "amor")
+    return db.get(str(chat_id), {}).get("nome", "Amor")
 
 # --- SERVIDOR WEB ---
 app = Flask('')
@@ -111,45 +121,43 @@ async def check_payment_loop(context: ContextTypes.DEFAULT_TYPE, chat_id, paymen
             status = info["response"]["status"]
             
             if status == 'approved':
+                # Busca o nome atualizado do cliente para usar nas mensagens
+                nome_cli = pegar_nome_cliente(chat_id)
+
                 # ==========================================================
-                # CENÁRIO 1: CLIENTE COMPROU O PACK (R$ 9,99)
+                # CENÁRIO 1: CLIENTE COMPROU O PACK
                 # ==========================================================
                 if tipo_compra == 'pack':
-                    # 1. Avisa que aprovou
+                    # 1. Avisa Aprovação
                     try:
                         await context.bot.edit_message_text(
                             chat_id=chat_id, 
                             message_id=message_id, 
-                            text="✅ **PAGAMENTO APROVADO!**\n\nEnviando seu conteúdo agora...", 
+                            text=f"✅ **PAGAMENTO APROVADO, {nome_cli}!**\n\nEnviando seu conteúdo agora...", 
                             parse_mode='Markdown'
                         )
                     except: pass
 
                     # 2. Entrega o Produto
-                    legenda = "📂 **Seu Pack Exclusivo!** Obrigada pela compra."
+                    legenda = f"📂 **Seu Pack Exclusivo, {nome_cli}!** Obrigada pela compra."
                     try:
                         if TIPO_PRODUTO == 'documento': await context.bot.send_document(chat_id, ID_PRODUTO, caption=legenda)
                         elif TIPO_PRODUTO == 'video': await context.bot.send_video(chat_id, ID_PRODUTO, caption=legenda)
                         else: await context.bot.send_photo(chat_id, ID_PRODUTO, caption=legenda)
                     except: pass
                     
-                    # 3. Atualiza status para parar o marketing de cobrança
                     atualizar_campo(chat_id, "status", "comprador")
                     
-                    # 4. 🔥 O GRANDE MOMENTO: MENSAGEM PESSOAL (UPSELL)
-                    # Só aparece aqui, depois de pagar e receber.
-                    nome_cli = pegar_nome_cliente(chat_id)
-                    
+                    # 3. 🔥 UPSELL PESSOAL (MENSAGEM DE R$ 1,00)
                     texto_upsell = (
                         f"Oi {nome_cli}, vi que você adquiriu meu conteúdo! 🔥\n\n"
                         "Por apenas um valor simbólico, você pode me enviar seu comentário ou sugestão "
-                        "para meus próximos vídeos ou fotos, para que eu possa atualizar para vocês.\n\n"
+                        "para meus próximos vídeos ou fotos.\n\n"
                         "Bjs! 💋"
                     )
                     
                     kb_msg = [[InlineKeyboardButton(f"💌 Enviar Sugestão (R$ {VALOR_MENSAGEM})", callback_data='comprar_msg')]]
                     
-                    # Envia a mensagem com delay de 2 segundos para não embolar com o arquivo
                     await asyncio.sleep(2)
                     await context.bot.send_message(
                         chat_id,
@@ -159,22 +167,22 @@ async def check_payment_loop(context: ContextTypes.DEFAULT_TYPE, chat_id, paymen
                     )
 
                 # ==========================================================
-                # CENÁRIO 2: CLIENTE COMPROU A MENSAGEM VIP (R$ 1,00)
+                # CENÁRIO 2: CLIENTE COMPROU A MENSAGEM VIP
                 # ==========================================================
                 elif tipo_compra == 'msg_vip':
                     try:
+                        # Aqui usamos o nome do cliente corretamente na mensagem
                         await context.bot.edit_message_text(
                             chat_id=chat_id, 
                             message_id=message_id, 
-                            text="✅ **CHAT PRIVADO LIBERADO!**\n\n {nome} ,pode escrever sua mensagem ou sugestão abaixo que eu vou ler com carinho. 👇", 
+                            text=f"✅ **CHAT VIP LIBERADO!**\n\n{nome_cli}, pode escrever sua mensagem ou sugestão abaixo que eu vou ler com carinho. 👇", 
                             parse_mode='Markdown'
                         )
                     except: pass
                     
-                    # Libera a permissão no banco de dados
                     atualizar_campo(chat_id, "pode_mandar_msg", True)
 
-                return # Encerra o loop (Pagamento aceito)
+                return # Encerra o loop
 
             elif status in ['rejected', 'cancelled']:
                 await context.bot.edit_message_text(chat_id, message_id, text="❌ Pagamento Cancelado.")
@@ -201,12 +209,16 @@ async def marketing_automacao_loop(app_context):
                 except: continue
                 dias = (agora - entrada).days
                 ultimo = dados.get("funil_dia", 0)
-                nome_cli = dados.get("nome", "amor")
+                
+                # Pega o nome para personalizar o marketing
+                nome_cli = dados.get("nome", "Amor")
 
                 # Dia 2
                 if dias >= 1 and ultimo < 2 and ID_DIA_2:
                     try:
+                        # Substitui {nome} pelo nome real na mensagem configurada
                         msg = TXT_DIA_2.replace("{nome}", nome_cli)
+                        
                         try: await app_context.bot.send_photo(uid, ID_DIA_2, caption=msg)
                         except: await app_context.bot.send_video(uid, ID_DIA_2, caption=msg)
                         kb = [[InlineKeyboardButton("🔥 Quero Agora", callback_data='comprar')]]
@@ -218,6 +230,7 @@ async def marketing_automacao_loop(app_context):
                 elif dias >= 2 and ultimo < 3 and ID_DIA_3:
                     try:
                         msg = TXT_DIA_3.replace("{nome}", nome_cli)
+                        
                         try: await app_context.bot.send_photo(uid, ID_DIA_3, caption=msg)
                         except: await app_context.bot.send_video(uid, ID_DIA_3, caption=msg)
                         kb = [[InlineKeyboardButton("💎 Desconto VIP", callback_data='comprar')]]
@@ -233,7 +246,10 @@ async def marketing_automacao_loop(app_context):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_name = user.first_name
+    
+    # Salva o nome imediatamente
     registrar_usuario(user.id, user_name)
+    
     try:
         if TIPO_VITRINE == 'video': await context.bot.send_video(user.id, ID_VITRINE, caption="👀 Prévia...")
         else: await context.bot.send_photo(user.id, ID_VITRINE)
@@ -257,17 +273,17 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
+    # Atualiza o nome novamente ao clicar (garantia extra)
+    registrar_usuario(update.effective_chat.id, update.effective_user.first_name)
+    
     tipo = 'pack'
     valor = VALOR_PRODUTO
     desc = "Pack VIP"
     
-    # Se clicou no botão inicial
     if query.data == 'comprar':
         tipo = 'pack'
         valor = VALOR_PRODUTO
-        registrar_usuario(update.effective_chat.id, update.effective_user.first_name)
     
-    # Se clicou no botão Pós-Venda (Mensagem de 1 real)
     elif query.data == 'comprar_msg':
         tipo = 'msg_vip'
         valor = VALOR_MENSAGEM
@@ -288,12 +304,11 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(update.effective_chat.id, f"`{pix}`", parse_mode='Markdown')
         status_msg = await context.bot.send_message(update.effective_chat.id, "⏳ **Aguardando Pagamento...**\n_(Monitorando...)_", parse_mode='Markdown')
         
-        # Inicia a verificação, passando o 'tipo' correto
         asyncio.create_task(check_payment_loop(context, update.effective_chat.id, pid, status_msg.message_id, tipo_compra=tipo))
     except Exception as e:
         await context.bot.send_message(update.effective_chat.id, f"Erro MP: {e}")
 
-# --- RECEBER MENSAGEM PAGA (CHAT VIP) ---
+# --- RECEBER MENSAGEM PAGA ---
 async def receber_mensagem_privada(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id == ADMIN_ID and update.message.caption is None and update.message.text is None: return 
     user_id = update.effective_user.id
@@ -305,7 +320,6 @@ async def receber_mensagem_privada(update: Update, context: ContextTypes.DEFAULT
         if not msg_cliente: msg_cliente = "Arquivo de Mídia"
 
         try:
-            # Envia para você (ADMIN)
             await context.bot.send_message(
                 ADMIN_ID, 
                 f"💌 **NOVA MENSAGEM PAGA (R$ {VALOR_MENSAGEM})**\n\n"
@@ -317,7 +331,7 @@ async def receber_mensagem_privada(update: Update, context: ContextTypes.DEFAULT
             if update.message.photo or update.message.video or update.message.document:
                 await update.message.forward(ADMIN_ID)
 
-            await update.message.reply_text("✅ **Mensagem Enviada!**\nOi, {nome} eu recebi aqui sua mensagem e vou ler com carinho. Obrigada!")
+            await update.message.reply_text("✅ **Mensagem Enviada!**\nEu recebi aqui e vou ler com carinho. Obrigada!")
             atualizar_campo(user_id, "pode_mandar_msg", False)
         except:
             await update.message.reply_text("Erro ao enviar. Tente novamente.")
@@ -371,4 +385,3 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(marketing_automacao_loop(app_bot))
     app_bot.run_polling()
-
