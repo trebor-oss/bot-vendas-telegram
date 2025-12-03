@@ -24,12 +24,14 @@ ID_PRODUTO = 'BQACAgEAAxkBAAMaaS8t485BndGpJ_I2t_gZyj9ZX3QAAncGAAKRS3lFLCbLbVc-e8
 TIPO_PRODUTO = 'documento'
 
 # FINANCEIRO
-MP_ACCESS_TOKEN = 'APP_USR-1151802253593086-120216-db34f09f0a276c014b4ea41f372b5080-7110707' # COLE SEU TOKEN DO MERCADO PAGO AQUI
-VALOR_PRODUTO = 0.01 #PRECO QUE O CLIENTE VAI PAGAR
+# ⚠️ RECOMENDAÇÃO: Gere um novo token no Mercado Pago por segurança, pois este foi exposto.
+MP_ACCESS_TOKEN = 'APP_USR-1151802253593086-120216-db34f09f0a276c014b4ea41f372b5080-7110707' 
+VALOR_PRODUTO = 0.01 # PRECO DE TESTE
 
 # CONFIGURAÇÃO DE MARKETING (Dia 2 e 3)
 ID_DIA_2 = 'BAACAgEAAxkBAANraTAvKSUG3TxC_CIPrGRsA9ZOnQcAAsAGAAKawYhFoHG-Wdvo9eM2BA' 
 TXT_DIA_2 = "Ficou na vontade? 😈 O link vai expirar. Garanta o seu agora."
+
 ID_DIA_3 = 'AgACAgEAAxkBAAOGaTA7SrfoOaeHlz784ThYZ_U__kgAAiMLaxuawYhFLGFNqnmzeL8BAAMCAAN5AAM2BA' 
 TXT_DIA_3 = (
     "Ainda com medo de não receber seu pack de imagens/videos? 🤔\n\n"
@@ -191,7 +193,12 @@ async def marketing_automacao_loop(app_context):
 
 # --- COMANDOS ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    registrar_usuario(update.effective_chat.id, update.effective_user.first_name)
+    # CORREÇÃO: Definindo a variável user corretamente
+    user = update.effective_user
+    user_name = user.first_name # Cria a variável user_name que estava faltando
+    
+    registrar_usuario(user.id, user_name)
+    
     try:
         if TIPO_VITRINE == 'video': await context.bot.send_video(update.effective_chat.id, ID_VITRINE, caption="👀 Prévia...")
         else: await context.bot.send_photo(update.effective_chat.id, ID_VITRINE)
@@ -206,7 +213,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• Ângulos que nunca mostrei antes\n"
         "• Acesso Vitalício (Baixe e guarde)\n\n"
         "🔥 **De ~R$ 29,90~ mas agora estou fazendo uma Promoção Relâmpago**\n"
-        "👇 Garanta seu lugar antes que o preço suba. **R$ {VALOR_PRODUTO}**"
+        f"👇 Garanta seu lugar antes que o preço suba. **R$ {VALOR_PRODUTO}**"
     )
     kb = [[InlineKeyboardButton("🔓 Quero Acesso Agora", callback_data='comprar')]]
     await update.message.reply_text(texto, reply_markup=InlineKeyboardMarkup(kb), parse_mode='Markdown')
@@ -281,5 +288,3 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(marketing_automacao_loop(app_bot))
     app_bot.run_polling()
-
-
