@@ -11,22 +11,24 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
 # ==============================================================================
-# ⚙️ CONFIGURAÇÕES GERAIS
+# ⚙️ ÁREA DE CONFIGURAÇÃO (EDITE AQUI)
 # ==============================================================================
 
 TOKEN_DO_BOT = '8553730181:AAF6ko-j_bJ5C5qrJn6wRLTsdgCTpsVV3bc'
 ADMIN_ID = 8118512396
 
-# SEUS ARQUIVOS
+# 🔒 CANAL VIP (ONDE ESTÁ O CONTEÚDO)
+# Cole o ID do canal (começa com -100). O bot deve ser ADMIN lá.
+ID_CANAL_VIP = '-1003281459768' 
+
+# VITRINE (Para atrair o cliente no /start)
 ID_VITRINE = 'BAACAgEAAxkBAAMRaS8rNKhVKXPYWqXhC970CFlCaYwAAnQGAAKRS3lFP5Q3Hl9lVNg2BA'
 TIPO_VITRINE = 'video' 
-ID_PRODUTO = 'BQACAgEAAxkBAAMaaS8t485BndGpJ_I2t_gZyj9ZX3QAAncGAAKRS3lFLCbLbVc-e8w2BA'
-TIPO_PRODUTO = 'documento'
 
 # FINANCEIRO
-# ⚠️ IMPORTANTE: Cole seu Token do Mercado Pago aqui
+# Token de Produção do Mercado Pago
 MP_ACCESS_TOKEN = 'APP_USR-1151802253593086-120216-db34f09f0a276c014b4ea41f372b5080-7110707' 
-VALOR_PRODUTO = 9.99   # Preço do Pack
+VALOR_PRODUTO = 9.99   # Preço do Acesso ao Canal
 VALOR_MENSAGEM = 1.00  # Preço Chat VIP
 
 # MARKETING AUTOMÁTICO (Dia 2 e 3)
@@ -34,7 +36,7 @@ ID_DIA_2 = 'BAACAgEAAxkBAANraTAvKSUG3TxC_CIPrGRsA9ZOnQcAAsAGAAKawYhFoHG-Wdvo9eM2
 TXT_DIA_2 = "Ficou na vontade, {nome}? 😈 O link vai expirar. Garanta o seu agora."
 
 ID_DIA_3 = 'AgACAgEAAxkBAAOGaTA7SrfoOaeHlz784ThYZ_U__kgAAiMLaxuawYhFLGFNqnmzeL8BAAMCAAN5AAM2BA' 
-TXT_DIA_3 = "Ainda com medo, {nome}? 🤔 Olha quem comprou hoje! O valor de R$ 9,99 vai subir."
+TXT_DIA_3 = "Ainda com medo, {nome}? 🤔 Olha quem entrou no canal hoje! O valor vai subir."
 
 # ==============================================================================
 
@@ -97,13 +99,13 @@ def pegar_nome_cliente(chat_id):
 # --- SERVIDOR WEB ---
 app = Flask('')
 @app.route('/')
-def home(): return "PrimeFlixx V5.1 Online"
+def home(): return "PrimeFlixx Canal VIP Online"
 def run_http(): app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
 def keep_alive(): Thread(target=run_http).start()
 
 logging.basicConfig(level=logging.INFO)
 
-# --- VALIDAÇÃO POR REFERÊNCIA EXTERNA ---
+# --- VALIDAÇÃO DE PAGAMENTO ---
 async def check_payment_loop(context: ContextTypes.DEFAULT_TYPE, chat_id, external_ref, message_id, tipo_compra='pack'):
     attempts = 0
     max_attempts = 90
@@ -112,7 +114,6 @@ async def check_payment_loop(context: ContextTypes.DEFAULT_TYPE, chat_id, extern
         try:
             filters = {"external_reference": external_ref}
             search_result = sdk.payment().search(filters)
-            
             pagamento_encontrado = False
             status = "pending"
             
@@ -124,27 +125,45 @@ async def check_payment_loop(context: ContextTypes.DEFAULT_TYPE, chat_id, extern
             if pagamento_encontrado and status == 'approved':
                 nome_cli = pegar_nome_cliente(chat_id)
 
+                # --- CENÁRIO 1: ACESSO AO CANAL ---
                 if tipo_compra == 'pack':
                     try:
                         await context.bot.edit_message_text(
                             chat_id=chat_id, 
                             message_id=message_id, 
-                            text=f"✅ **PAGAMENTO APROVADO, {nome_cli}!**\n\nEnviando seu conteúdo agora...", 
+                            text=f"✅ **PAGAMENTO APROVADO, {nome_cli}!**\n\nGerando seu acesso VIP exclusivo...", 
                             parse_mode='Markdown'
                         )
                     except: pass
 
-                    legenda = f"📂 **Seu Pack Exclusivo, {nome_cli}!** Obrigada pela compra."
+                    # 🔥 GERAÇÃO DO LINK ÚNICO (A MÁGICA ACONTECE AQUI)
                     try:
-                        if TIPO_PRODUTO == 'documento': await context.bot.send_document(chat_id, ID_PRODUTO, caption=legenda)
-                        elif TIPO_PRODUTO == 'video': await context.bot.send_video(chat_id, ID_PRODUTO, caption=legenda)
-                        else: await context.bot.send_photo(chat_id, ID_PRODUTO, caption=legenda)
-                    except: pass
+                        # Cria um link que só funciona para 1 pessoa
+                        convite = await context.bot.create_chat_invite_link(
+                            chat_id=ID_CANAL_VIP,
+                            name=f"Acesso Pago - {nome_cli}", 
+                            member_limit=1 
+                        )
+                        link_acesso = convite.invite_link
+                        
+                        msg_entrega = (
+                            f"📂 **Acesso Liberado!**\n\n"
+                            f"Este é o seu link exclusivo. Ele só funciona **uma única vez**.\n"
+                            f"Toque abaixo para entrar no Canal VIP:\n\n"
+                            f"🔗 [CLIQUE AQUI PARA ENTRAR]({link_acesso})\n\n"
+                            "⚠️ *Conteúdo protegido. Proibido prints e reencaminhamentos.*"
+                        )
+                        
+                        await context.bot.send_message(chat_id, msg_entrega, parse_mode='Markdown')
+                        
+                    except Exception as e:
+                        await context.bot.send_message(chat_id, f"⚠️ Erro ao gerar link. O bot é Admin do canal? Erro: {e}")
                     
                     atualizar_campo(chat_id, "status", "comprador")
                     
+                    # UPSELL (Venda da Mensagem)
                     texto_upsell = (
-                        f"Oi {nome_cli}, vi que você adquiriu meu conteúdo! 🔥\n\n"
+                        f"Oi {nome_cli}, já está no canal? 🔥\n\n"
                         "Por apenas um valor simbólico, você pode me enviar seu comentário ou sugestão.\n"
                         "Bjs! 💋"
                     )
@@ -152,6 +171,7 @@ async def check_payment_loop(context: ContextTypes.DEFAULT_TYPE, chat_id, extern
                     await asyncio.sleep(2)
                     await context.bot.send_message(chat_id, texto_upsell, reply_markup=InlineKeyboardMarkup(kb_msg), parse_mode='Markdown')
 
+                # --- CENÁRIO 2: MENSAGEM VIP ---
                 elif tipo_compra == 'msg_vip':
                     try:
                         await context.bot.edit_message_text(
@@ -219,7 +239,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_name = user.first_name
     registrar_usuario(user.id, user_name)
-    
     try:
         if TIPO_VITRINE == 'video': await context.bot.send_video(user.id, ID_VITRINE, caption="👀 Prévia...")
         else: await context.bot.send_photo(user.id, ID_VITRINE)
@@ -232,7 +251,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🔞 **O que te espera:**\n"
         "• Vídeos Completos em Full HD\n"
         "• Ângulos que nunca mostrei antes\n"
-        "• Acesso Vitalício (Baixe e guarde)\n\n"
+        "• Acesso Vitalício ao Canal VIP\n\n"
         "🔥 **Promoção Relâmpago**\n"
         f"👇 Garanta seu lugar: **R$ {VALOR_PRODUTO}**"
     )
@@ -247,7 +266,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     tipo = 'pack'
     valor = VALOR_PRODUTO
-    desc = "Pack VIP"
+    desc = "Acesso Canal VIP"
     
     if query.data == 'comprar':
         tipo = 'pack'
@@ -261,57 +280,24 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     try:
         external_ref = str(uuid.uuid4())
-        
-        # Cria a Preferência (LINK)
         preference_data = {
-            "items": [
-                {
-                    "title": desc,
-                    "quantity": 1,
-                    "unit_price": float(valor)
-                }
-            ],
-            "payer": {
-                "name": update.effective_user.first_name,
-                "email": "cliente_bot@email.com"
-            },
+            "items": [{"title": desc, "quantity": 1, "unit_price": float(valor)}],
+            "payer": {"name": update.effective_user.first_name, "email": "cliente_bot@email.com"},
             "external_reference": external_ref,
-            "back_urls": {
-                "success": "https://www.google.com",
-                "failure": "https://www.google.com",
-                "pending": "https://www.google.com"
-            },
+            "back_urls": {"success": "https://www.google.com", "failure": "https://www.google.com", "pending": "https://www.google.com"},
             "auto_return": "approved",
-            # 🔥 AQUI O FILTRO PARA BLOQUEAR BOLETO
-            "payment_methods": {
-                "excluded_payment_types": [
-                    {"id": "ticket"}
-                ],
-                "installments": 12
-            }
+            "payment_methods": {"excluded_payment_types": [{"id": "ticket"}], "installments": 12}
         }
         
         preference_response = sdk.preference().create(preference_data)
         preference = preference_response["response"]
         link_pagamento = preference["init_point"]
         
-        texto_pagamento = (
-            f"✅ **Link Gerado!**\n\n"
-            f"Escolha: **Pix ou Cartão de Crédito**.\n"
-            f"(Aprovação Imediata)\n\n"
-            f"👇👇👇"
-        )
-        
+        texto_pagamento = f"✅ **Link Gerado!**\n\nEscolha: **Pix ou Cartão**.\n(Aprovação Imediata)\n\n👇👇👇"
         kb_pagamento = [[InlineKeyboardButton("💳 Pagar Agora", url=link_pagamento)]]
         
-        await context.bot.send_message(
-            update.effective_chat.id, 
-            texto_pagamento, 
-            reply_markup=InlineKeyboardMarkup(kb_pagamento), 
-            parse_mode='Markdown'
-        )
-        
-        status_msg = await context.bot.send_message(update.effective_chat.id, "⏳ **Aguardando confirmação...**\n_(Assim que pagar, libera automático)_", parse_mode='Markdown')
+        await context.bot.send_message(update.effective_chat.id, texto_pagamento, reply_markup=InlineKeyboardMarkup(kb_pagamento), parse_mode='Markdown')
+        status_msg = await context.bot.send_message(update.effective_chat.id, "⏳ **Aguardando confirmação...**", parse_mode='Markdown')
         asyncio.create_task(check_payment_loop(context, update.effective_chat.id, external_ref, status_msg.message_id, tipo_compra=tipo))
         
     except Exception as e:
@@ -376,7 +362,7 @@ if __name__ == '__main__':
     app_bot.add_handler(CommandHandler('aviso_leads', aviso_leads))
     app_bot.add_handler(CommandHandler('aviso_clientes', aviso_clientes))
     
-    print("PrimeFlixx V5.1 Iniciado...")
+    print("PrimeFlixx V6.0 Iniciado...")
     loop = asyncio.get_event_loop()
     loop.create_task(marketing_automacao_loop(app_bot))
     app_bot.run_polling()
